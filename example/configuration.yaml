@@ -1,0 +1,16 @@
+subscriptions:
+    Binance:
+        instruments:
+          - ETH/BTC
+          - XRP/BTC
+        depth: 10
+
+    Bitmex:
+        instruments:
+            - ETHUSD
+
+handlers:
+    sql:
+        connection: "sqlite:///.data/order_book.db"
+        is_rotate: True
+        rotate_frequency: "%Y%m%d%H%M"
