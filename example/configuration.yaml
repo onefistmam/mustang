@@ -5,12 +5,12 @@ subscriptions:
           - XRP/BTC
         depth: 10
 
-    Bitmex:
-        instruments:
-            - ETHUSD
+#    Bitmex:
+#        instruments:
+#            - ETHUSD
 
 handlers:
     sql:
-        connection: "sqlite:///.data/order_book.db"
+        connection: "sqlite:///./order_book.db"
         is_rotate: True
         rotate_frequency: "%Y%m%d%H%M"

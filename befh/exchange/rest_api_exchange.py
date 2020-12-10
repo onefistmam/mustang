@@ -19,7 +19,7 @@ class RestApiExchange(Exchange):
         """
         super().load(**kwargs)
         ccxt_exchange = getattr(ccxt, self._name.lower(), None)
-        if ccxt_exchange:          
+        if ccxt_exchange:
             self._exchange_interface = ccxt_exchange()
             self._exchange_interface.load_markets()
             self._check_valid_instrument()
@@ -33,12 +33,12 @@ class RestApiExchange(Exchange):
             for symbol, instmt_info in self._instruments.items():
                 self._update_order_book(
                     symbol=symbol,
-                    instmt_info=instmt_info)
+                    instmt_info=instmt_info, is_update_handler=True)
 
                 if instmt_info.is_possible_trade():
                     self._update_trades(
                         symbol=symbol,
-                        instmt_info=instmt_info)
+                        instmt_info=instmt_info,is_update_handler=True)
 
                 self._rotate_ordre_tables()
 

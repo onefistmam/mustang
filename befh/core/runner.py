@@ -25,18 +25,18 @@ class Runner:
 
         handlers_configuration = self._config.handlers
         handlers = self.create_handlers(
-            handlers_configuration=handlers_configuration,
-            is_debug=self._is_debug,
-            is_cold=self._is_cold)
+            handlers_configuration,
+            self._is_debug,
+            self._is_cold)
 
         self._handlers = handlers
 
         exchanges_configuration = self._config.subscriptions
         exchanges = self.create_exchanges(
-            exchanges_configuration=exchanges_configuration,
-            handlers=handlers,
-            is_debug=self._is_debug,
-            is_cold=self._is_cold)
+            exchanges_configuration,
+            handlers,
+            self._is_debug,
+            self._is_cold)
 
         self._exchanges = exchanges
 
@@ -44,8 +44,8 @@ class Runner:
         """Run.
         """
         LOGGER.info('Start running the feed handler')
-
         processes = []
+        print("Start run handlers")
 
         for name, handler in self._handlers.items():
             LOGGER.info('Running handler %s', name)
@@ -53,15 +53,12 @@ class Runner:
             process.start()
             processes.append(process)
 
+
         for name, exchange in self._exchanges.items():
             LOGGER.info('Running exchange %s', name)
-
-            if len(self._exchanges) > 1:
-                process = mp.Process(target=exchange.run)
-                process.start()
-                processes.append(process)
-            else:
-                exchange.run()
+            process = mp.Process(target=exchange.run)
+            process.start()
+            processes.append(process)
 
         LOGGER.info('Joining all the processes')
         for process in processes:
@@ -85,10 +82,7 @@ class Runner:
         for exchange in self._exchanges.values():
             for name, instrument in exchange.instruments.items():
                 for handler in exchange.handlers.values():
-                    handler.rotate_table(
-                        table=instrument,
-                        last_datetime=date,
-                        allow_fail=True)
+                    handler.rotate_table(instrument,date,True)
 
         LOGGER.info('Closing the handlers')
         for handler in self._handlers.values():
@@ -108,12 +102,12 @@ class Runner:
         try:
             from befh.exchange.websocket_exchange import WebsocketExchange
             exchange = WebsocketExchange(
-                name=exchange_name,
-                config=subscription,
-                is_debug=is_debug,
-                is_cold=is_cold)
+                exchange_name,
+                subscription,
+                is_debug,
+                is_cold)
 
-            exchange.load(handlers=handlers)
+            exchange.load(handlers)
 
         except ImportError as error:
             LOGGER.info(
@@ -139,11 +133,11 @@ class Runner:
 
         for exchange_name, subscription in exchanges_configuration.items():
             exchange = Runner.create_exchange(
-                exchange_name=exchange_name,
-                subscription=subscription,
-                handlers=handlers,
-                is_debug=is_debug,
-                is_cold=is_cold)
+                exchange_name,
+                subscription,
+                handlers,
+                is_debug,
+                is_cold)
             exchanges[exchange_name] = exchange
 
         return exchanges
