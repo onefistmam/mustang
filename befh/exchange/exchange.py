@@ -76,13 +76,12 @@ class Exchange:
         """
         instruments = self._config['instruments']
         for symbol in instruments:
-            if "-" in symbol:
-                symbol = symbol.replace("-", "_")
             instmt_info = self.DEFAULT_ORDER_BOOK_CLASS(
                 exchange=self._name,
                 symbol=symbol)
             self._instruments[symbol] = instmt_info
-
+            if "-" in symbol:
+                instmt_info.table_name = symbol.replace("-", "_")
             for handler in self._handlers.values():
                 handler.prepare_create_table(
                     table_name=instmt_info.table_name,
