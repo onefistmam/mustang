@@ -76,7 +76,7 @@ class Exchange:
         """
         instruments = self._config['instruments']
         for symbol in instruments:
-            tmpSymbol
+            tmpSymbol = symbol
             if "-" in symbol:
                 tmpSymbol = symbol.replace("-", "_")
             instmt_info = self.DEFAULT_ORDER_BOOK_CLASS(
