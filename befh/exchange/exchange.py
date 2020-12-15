@@ -29,6 +29,8 @@ class Exchange:
         self._last_request_time = datetime(1990, 1, 1)
         self._exchange_interface = None
         self._handlers = {}
+        LOGGER.info('exchange created %s', name)
+
 
     @classmethod
     def get_order_book_class(cls):
@@ -92,7 +94,7 @@ class Exchange:
             assert isinstance(self._depth, int), (
                 "Depth ({}) must be an integer".format(
                     self._depth))
-            
+
     def _load_type(self):
         """Load type.
         """
@@ -100,8 +102,8 @@ class Exchange:
             self._type = self._config['type']
             assert isinstance(self._type, str), (
                 "Type ({}) must be an string".format(
-                    self._type))    
-        
+                    self._type))
+
     def _load_is_orders(self):
         """Load is_orders.
         """
@@ -109,4 +111,4 @@ class Exchange:
             self._is_orders = self._config['is_orders']
             assert isinstance(self._is_orders, bool), (
                 "is_orders ({}) must be an boolean".format(
-                    self._is_orders))    
+                    self._is_orders))

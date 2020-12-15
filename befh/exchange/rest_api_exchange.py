@@ -88,14 +88,13 @@ class RestApiExchange(Exchange):
 
         bids = order_book['bids']
         asks = order_book['asks']
-
         is_updated = instmt_info.update_bids_asks(
             bids=bids,
             asks=asks)
 
         if not is_updated:
             return
-
+        LOGGER.info("order_book result symbol: %s, instmt_info: %s, bids:%s, asks:%s", symbol, instmt_info, bids, asks)
         if is_update_handler:
             for handler in self._handlers.values():
                 instmt_info.update_table(handler=handler)

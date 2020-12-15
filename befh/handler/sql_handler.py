@@ -86,6 +86,8 @@ class SqlHandler(RotateHandler):
 
         column_names = (','.join(fields[0]))
         values = (','.join([str(f) for f in fields[1]]))
+        if '-' in table_name:
+            table_name = table_name.replace('-', '_')
 
         sql_statement = (
             "insert into {table_name} ({column_names}) values "

@@ -41,7 +41,7 @@ class WebsocketExchange(RestApiExchange):
 
         contract_exchanges_use_common_channel = ['HuobiSwap','HuibiDM','KrakenFutures','BinanceFutures','Bitmex']
         if self._is_orders:
-            if self._type == 'spot' or self._name in contract_exchanges_use_common_channel:                
+            if self._type == 'spot' or self._name in contract_exchanges_use_common_channel:
                 channels = [TRADES, L2_BOOK]
             elif self._type == 'futures':
                 channels = [TRADES_FUTURES, L2_BOOK_FUTURES]
@@ -50,10 +50,10 @@ class WebsocketExchange(RestApiExchange):
 
             callbacks = {
                 channels[0]: TradeCallback(self._update_trade_callback),
-                L2_BOOK: BookCallback(self._update_order_book_callback)               
-            }            
+                L2_BOOK: BookCallback(self._update_order_book_callback)
+            }
         else:
-            if self._type == 'spot' or self._name in contract_exchanges_use_common_channel:                
+            if self._type == 'spot' or self._name in contract_exchanges_use_common_channel:
                 channels = [TRADES]
             elif self._type == 'futures':
                 channels = [TRADES_FUTURES]
@@ -61,8 +61,8 @@ class WebsocketExchange(RestApiExchange):
                 channels = [TRADES_SWAP]
 
             callbacks = {
-                channels[0]: TradeCallback(self._update_trade_callback),                
-            }            
+                channels[0]: TradeCallback(self._update_trade_callback),
+            }
 
         if self._name.lower() == 'poloniex':
             self._feed_handler.add_feed(
@@ -135,7 +135,7 @@ class WebsocketExchange(RestApiExchange):
 
         for price, volume in book[ASK].items():
             asks.append((float(price), float(volume)))
-
+        LOGGER.info("order_book result instmt_info: %s, bids:%s, asks:%s", instmt_info, bids, asks)
         is_updated = instmt_info.update_bids_asks(
             bids=bids,
             asks=asks)

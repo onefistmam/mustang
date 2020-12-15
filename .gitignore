@@ -69,3 +69,4 @@ target/
 .env/
 
 .idea/
+venv/
