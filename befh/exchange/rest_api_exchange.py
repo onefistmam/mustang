@@ -94,7 +94,7 @@ class RestApiExchange(Exchange):
 
         if not is_updated:
             return
-        LOGGER.info("order_book result symbol: %s, instmt_info: %s, bids:%s, asks:%s", symbol, instmt_info, bids, asks)
+        LOGGER.info("order_book result symbol: %s", symbol)
         if is_update_handler:
             for handler in self._handlers.values():
                 instmt_info.update_table(handler=handler)

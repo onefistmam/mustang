@@ -135,7 +135,6 @@ class WebsocketExchange(RestApiExchange):
 
         for price, volume in book[ASK].items():
             asks.append((float(price), float(volume)))
-        LOGGER.info("order_book result instmt_info: %s, bids:%s, asks:%s", instmt_info, bids, asks)
         is_updated = instmt_info.update_bids_asks(
             bids=bids,
             asks=asks)
