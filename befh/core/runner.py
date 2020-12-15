@@ -132,6 +132,7 @@ class Runner:
         exchanges = {}
 
         for exchange_name, subscription in exchanges_configuration.items():
+            LOGGER.info("exchange_name:%s, subscription:%s", exchange_name, subscription)
             exchange = Runner.create_exchange(
                 exchange_name,
                 subscription,
