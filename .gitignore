@@ -67,3 +67,5 @@ target/
 
 # Development environment
 .env/
+
+.idea/
