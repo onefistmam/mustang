@@ -4,10 +4,15 @@ subscriptions:
 #          - ETH/BTC
 #          - XRP/BTC
 #        depth: 10
-    ftx:
+#    FTX:
+#        instruments:
+#          - ETH-PERP
+#        depth: 10
+    Binance:
         instruments:
-          - ETH-PERP
+          - ETH/USDT
         depth: 10
+        type: swap
 
 #    Bitmex:
 #        instruments:

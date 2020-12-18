@@ -13,12 +13,12 @@ class HandlerOperator:
         """
         raise NotImplementedError(
             'Execute is not implemented')
-    
+
     @staticmethod
     def parse_table_name(table_name):
         """parse table name fix sqlalchemy can't insert table name with '.'.
         """
-            
+
         return table_name.replace('.', '')
 
 
@@ -36,10 +36,10 @@ class HandlerCreateTableOperator(HandlerOperator):
     """Create table operator.
     """
 
-    def __init__(self, table_name, fields, **kwargs):
+    def __init__(self, table_name, fields):
         """Constructor.
         """
-        super().__init__(**kwargs)
+        super().__init__(False, False)
         self._table_name = self.parse_table_name(table_name)
         self._fields = fields
 

@@ -14,10 +14,10 @@ class RestApiExchange(Exchange):
     """Rest API exchange.
     """
 
-    def load(self, is_initialize_instmt=True, **kwargs):
+    def load(self, is_initialize_instmt=True, handlers=None):
         """Load.
         """
-        super().load(**kwargs)
+        super().load(handlers)
         ccxt_exchange = getattr(ccxt, self._name.lower(), None)
         if ccxt_exchange:
             self._exchange_interface = ccxt_exchange()
@@ -40,7 +40,7 @@ class RestApiExchange(Exchange):
                         symbol=symbol,
                         instmt_info=instmt_info,is_update_handler=True)
 
-                self._rotate_ordre_tables()
+                self._rotate_order_tables()
 
     def _check_valid_instrument(self):
         """Check valid instrument.
@@ -94,10 +94,43 @@ class RestApiExchange(Exchange):
 
         if not is_updated:
             return
-        LOGGER.info("order_book result symbol: %s", symbol)
+        LOGGER.info("_update_order_book order_book result symbol: %s", symbol)
         if is_update_handler:
             for handler in self._handlers.values():
                 instmt_info.update_table(handler=handler)
+    def _update_ticker(self, symbol, instmt_info, is_update_handler=True):
+        """Callback order book.
+        """
+        tolerence_count = 0
+        order_book = None
+
+        while tolerence_count < self.TIMEOUT_TOLERANCE:
+            self._load_balance()
+            try:
+                order_book = self._exchange_interface.fetch_ticker(
+                    symbol=symbol)
+                break
+            except (RequestTimeout, NetworkError, ExchangeError) as e:
+                tolerence_count += 1
+                LOGGER.warning('Request timeout %s', e)
+
+        if order_book is None:
+            raise RuntimeError(
+                'Cannot load the order book after failover. '
+                'Please check the exceptions before and network connection')
+
+        bids = order_book['bids']
+        asks = order_book['asks']
+        is_updated = instmt_info.update_bids_asks(
+            bids=bids,
+            asks=asks)
+
+        if not is_updated:
+            return
+        LOGGER.info("_update_order_book order_book result symbol: %s", symbol)
+        # if is_update_handler:
+        #     for handler in self._handlers.values():
+        #         instmt_info.update_table(handler=handler)
 
     def _update_trades(self, symbol, instmt_info, is_update_handler=True):
         """Update trades.
@@ -129,7 +162,7 @@ class RestApiExchange(Exchange):
                 for handler in self._handlers.values():
                     instmt_info.update_table(handler=handler)
 
-    def _rotate_ordre_tables(self):
+    def _rotate_order_tables(self):
         """Rotate order table.
         """
         for name, handler in self._handlers.items():

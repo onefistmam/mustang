@@ -56,7 +56,7 @@ class Exchange:
         """
         return self._handlers
 
-    def load(self, handlers, **kwargs):
+    def load(self, handlers):
         """Load.
         """
         LOGGER.info('Loading exchange %s', self._name)

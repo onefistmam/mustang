@@ -3,6 +3,7 @@
 """Console script for BitcoinExchangeFH."""
 
 import logging
+import sys
 
 import click
 import yaml
@@ -61,4 +62,5 @@ def main(configuration, debug, cold, archive):
 
 
 if __name__ == "__main__":
+    sys.setrecursionlimit(10000)
     main()

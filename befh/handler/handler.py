@@ -46,13 +46,12 @@ class Handler:
         LOGGER.info('Loading handler %s', self.__class__.__name__)
         self._queue = queue
 
-    def prepare_create_table(self, table_name, fields, **kwargs):
+    def prepare_create_table(self, table_name, fields):
         """Prepare create table.
         """
         self._queue.put(HandlerCreateTableOperator(
             table_name=table_name,
-            fields=fields,
-            **kwargs))
+            fields=fields))
 
     def create_table(self, **kwargs):
         """Create table.

@@ -105,14 +105,15 @@ class Runner:
                 exchange_name,
                 subscription,
                 is_debug,
-                is_cold)
+                is_cold
+            )
 
             exchange.load(handlers)
 
         except ImportError as error:
             LOGGER.info(
                 'Cannot load websocket exchange %s and fall into '
-                'REST api exchange', exchange_name)
+                'REST api exchange， %s', exchange_name, error)
             from befh.exchange.rest_api_exchange import RestApiExchange
             exchange = RestApiExchange(
                 name=exchange_name,
