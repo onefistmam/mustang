@@ -5,6 +5,7 @@ Please see the LICENSE file for the terms and conditions
 associated with this software.
 '''
 import asyncio
+import json
 import logging
 from collections import defaultdict
 from datetime import datetime
@@ -13,7 +14,7 @@ from time import time
 
 import aiohttp
 from sortedcontainers import SortedDict as sd
-from yapic import json
+import yapic
 
 from cryptofeed.defines import BID, ASK, BINANCE, BUY, FUNDING, L2_BOOK, LIQUIDATIONS, OPEN_INTEREST, SELL, TICKER, TRADES
 from cryptofeed.feed import Feed
@@ -29,7 +30,7 @@ class Binance(Feed):
     def __init__(self, pairs=None, channels=None, callbacks=None, depth=1000, **kwargs):
         super().__init__(None, pairs=pairs, channels=channels, callbacks=callbacks, **kwargs)
         self.book_depth = depth
-        self.ws_endpoint = 'wss://stream.binance.com:9443'
+        self.ws_endpoint = 'wss://fstream.binance.com'
         self.rest_endpoint = 'https://www.binance.com/api/v1'
         self.address = self._address()
         self._reset()
@@ -39,7 +40,7 @@ class Binance(Feed):
         for chan in self.channels if not self.config else self.config:
             for pair in self.pairs if not self.config else self.config[chan]:
                 pair = pair.lower()
-                stream = "{pair}@{chan}/"
+                stream = pair + "@" + chan + "/"
                 address += stream
         return address[:-1]
 
@@ -79,39 +80,35 @@ class Binance(Feed):
     async def _ticker(self, msg: dict, timestamp: float):
         """
         {
-        "e": "24hrTicker",  // Event type
-        "E": 123456789,     // Event time
-        "s": "BNBBTC",      // Symbol
-        "p": "0.0015",      // Price change
-        "P": "250.00",      // Price change percent
-        "w": "0.0018",      // Weighted average price
-        "x": "0.0009",      // Previous day's close price
-        "c": "0.0025",      // Current day's close price
-        "Q": "10",          // Close trade's quantity
-        "b": "0.0024",      // Best bid price
-        "B": "10",          // Best bid quantity
-        "a": "0.0026",      // Best ask price
-        "A": "100",         // Best ask quantity
-        "o": "0.0010",      // Open price
-        "h": "0.0025",      // High price
-        "l": "0.0010",      // Low price
-        "v": "10000",       // Total traded base asset volume
-        "q": "18",          // Total traded quote asset volume
-        "O": 0,             // Statistics open time
-        "C": 86400000,      // Statistics close time
-        "F": 0,             // First trade ID
-        "L": 18150,         // Last trade Id
-        "n": 18151          // Total number of trades
+          "e": "24hrTicker",  // 事件类型
+          "E": 123456789,     // 事件时间
+          "s": "BNBUSDT",      // 交易对
+          "p": "0.0015",      // 24小时价格变化
+          "P": "250.00",      // 24小时价格变化(百分比)
+          "w": "0.0018",      // 平均价格
+          "c": "0.0025",      // 最新成交价格
+          "Q": "10",          // 最新成交价格上的成交量
+          "o": "0.0010",      // 24小时内第一比成交的价格
+          "h": "0.0025",      // 24小时内最高成交价
+          "l": "0.0010",      // 24小时内最低成交加
+          "v": "10000",       // 24小时内成交量
+          "q": "18",          // 24小时内成交额
+          "O": 0,             // 统计开始时间
+          "C": 86400000,      // 统计关闭时间
+          "F": 0,             // 24小时内第一笔成交交易ID
+          "L": 18150,         // 24小时内最后一笔成交交易ID
+          "n": 18151          // 24小时内成交数
         }
+
         """
-        LOG.info("binance ticker callback= %s", msg)
         pair = pair_exchange_to_std(msg['s'])
-        bid = Decimal(msg['b'])
-        ask = Decimal(msg['a'])
-        await self.callback(TICKER, feed=self.id,
+        last_price = Decimal(msg['c'])
+        avg_price = Decimal(msg['w'])
+        await self.callback(TICKER,
+                            feed=self.id,
                             pair=pair,
-                            bid=bid,
-                            ask=ask,
+                            last_price=last_price,
+                            avg_price=avg_price,
                             timestamp=timestamp_normalize(self.id, msg['E']),
                             receipt_timestamp=timestamp)
 

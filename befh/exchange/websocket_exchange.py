@@ -64,8 +64,8 @@ class WebsocketExchange(RestApiExchange):
                         self._name, channels)
 
             callbacks = {
-                channels[0]: TradeCallback(self._update_trade_callback),
-                L2_BOOK: BookCallback(self._update_order_book_callback),
+                # channels[0]: TradeCallback(self._update_trade_callback),
+                # L2_BOOK: BookCallback(self._update_order_book_callback),
                 TICKER: TickerCallback(self._update_ticker_callback)
             }
         else:
@@ -96,12 +96,14 @@ class WebsocketExchange(RestApiExchange):
     def run(self):
         """Run.
         """
+        LOGGER.info("feed run")
         self._feed_handler.run()
 
     @staticmethod
     def _get_exchange_name(name):
         """Get exchange name.
         """
+        LOGGER.info("get exchange name ,%s", name)
         if name == 'Hitbtc':
             return 'HitBTC'
         elif name == 'Okex':
@@ -161,6 +163,7 @@ class WebsocketExchange(RestApiExchange):
             return
 
     def _update_ticker_callback(self, feed, pair, bid, ask, timestamp, receipt_timestamp):
+        print("21311111")
         LOGGER.info("_update_ticker_callback feed :%s, pair:%s, bid:%9.4f, ask: %9.4f,timestamp:%d receipt_time:%d",
                     feed, pair, bid, ask, timestamp, receipt_timestamp)
         return

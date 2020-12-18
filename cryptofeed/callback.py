@@ -45,8 +45,8 @@ class TradeCallback(Callback):
 
 
 class TickerCallback(Callback):
-    async def __call__(self, *, feed: str, pair: str, bid: Decimal, ask: Decimal, timestamp: float, receipt_timestamp: float):
-        await super().__call__(feed, pair, bid, ask, timestamp, receipt_timestamp)
+    async def __call__(self, *, feed: str, pair: str, last_price: Decimal, avg_price: Decimal, timestamp: float, receipt_timestamp: float):
+        await super().__call__(feed, pair, last_price, avg_price, timestamp, receipt_timestamp)
 
 
 class BookCallback(Callback):
