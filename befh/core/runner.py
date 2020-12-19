@@ -47,12 +47,11 @@ class Runner:
         processes = []
         print("Start run handlers")
 
-        for name, handler in self._handlers.items():
-            LOGGER.info('Running handler %s', name)
-            process = mp.Process(target=handler.run)
-            process.start()
-            processes.append(process)
-
+        # for name, handler in self._handlers.items():
+        #     LOGGER.info('Running handler %s', name)
+        #     process = mp.Process(target=handler.run)
+        #     process.start()
+        #     processes.append(process)
 
         for name, exchange in self._exchanges.items():
             LOGGER.info('Running exchange %s', name)

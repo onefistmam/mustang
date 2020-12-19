@@ -11,6 +11,7 @@ from yapic import json
 
 from cryptofeed.defines import BINANCE_FUTURES, OPEN_INTEREST, TICKER
 from cryptofeed.exchange.binance import Binance
+from cryptofeed.standards import pair_exchange_to_std, timestamp_normalize
 
 LOG = logging.getLogger('feedhandler')
 
@@ -32,12 +33,13 @@ class BinanceFutures(Binance):
             for pair in self.pairs if not self.config else self.config[chan]:
                 pair = pair.lower()
                 if chan == TICKER:
-                    stream = "{pair}@bookTicker/"
+                    stream = f"{pair}@ticker/"
                 else:
-                    stream = "{pair}@{chan}/"
+                    stream = f"{pair}@{chan}/"
                 address += stream
-        if address == "{self.ws_endpoint}/stream?streams=":
+        if address == f"{self.ws_endpoint}/stream?streams=":
             return None
+        LOG.warning("address, %s", address)
         return address[:-1]
 
     def _check_update_id(self, pair: str, msg: dict) -> (bool, bool):
@@ -66,9 +68,9 @@ class BinanceFutures(Binance):
         msg = msg['data']
 
         pair = pair.upper()
-
         msg_type = msg.get('e')
-        if msg_type is None:
+        # LOG.warning("msg %s, msg_type=%s", msg, msg_type)
+        if msg_type == '24hrTicker':
             # For the BinanceFutures API it appears
             # the ticker stream (<symbol>@bookTicker) is
             # the only payload without an "e" key describing the event type

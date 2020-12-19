@@ -15,23 +15,23 @@ from time import time
 import aiohttp
 from sortedcontainers import SortedDict as sd
 import yapic
-
-from cryptofeed.defines import BID, ASK, BINANCE, BUY, FUNDING, L2_BOOK, LIQUIDATIONS, OPEN_INTEREST, SELL, TICKER, TRADES
+from cryptofeed.defines import BID, ASK, BINANCE, BUY, FUNDING, L2_BOOK, LIQUIDATIONS, OPEN_INTEREST, SELL, TICKER, \
+    TRADES
 from cryptofeed.feed import Feed
 from cryptofeed.standards import pair_exchange_to_std, timestamp_normalize
 
-
-LOG = logging.getLogger('feedhandler')
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
 
 
 class Binance(Feed):
     id = BINANCE
 
-    def __init__(self, pairs=None, channels=None, callbacks=None, depth=1000, **kwargs):
+    def __init__(self, pairs=None, channels=None, callbacks=None, depth=100, **kwargs):
         super().__init__(None, pairs=pairs, channels=channels, callbacks=callbacks, **kwargs)
         self.book_depth = depth
         self.ws_endpoint = 'wss://fstream.binance.com'
-        self.rest_endpoint = 'https://www.binance.com/api/v1'
+        self.rest_endpoint = 'https://fapi.binance.com/fapi/v1'
         self.address = self._address()
         self._reset()
 
@@ -42,6 +42,8 @@ class Binance(Feed):
                 pair = pair.lower()
                 stream = pair + "@" + chan + "/"
                 address += stream
+
+        LOG.warning("binance address finish address=%s", address[:-1])
         return address[:-1]
 
     def _reset(self):
@@ -79,27 +81,18 @@ class Binance(Feed):
 
     async def _ticker(self, msg: dict, timestamp: float):
         """
+        按Symbol的最优挂单信息
         {
-          "e": "24hrTicker",  // 事件类型
-          "E": 123456789,     // 事件时间
-          "s": "BNBUSDT",      // 交易对
-          "p": "0.0015",      // 24小时价格变化
-          "P": "250.00",      // 24小时价格变化(百分比)
-          "w": "0.0018",      // 平均价格
-          "c": "0.0025",      // 最新成交价格
-          "Q": "10",          // 最新成交价格上的成交量
-          "o": "0.0010",      // 24小时内第一比成交的价格
-          "h": "0.0025",      // 24小时内最高成交价
-          "l": "0.0010",      // 24小时内最低成交加
-          "v": "10000",       // 24小时内成交量
-          "q": "18",          // 24小时内成交额
-          "O": 0,             // 统计开始时间
-          "C": 86400000,      // 统计关闭时间
-          "F": 0,             // 24小时内第一笔成交交易ID
-          "L": 18150,         // 24小时内最后一笔成交交易ID
-          "n": 18151          // 24小时内成交数
+          "e":"bookTicker",     // 事件类型
+          "u":400900217,        // 更新ID
+          "E": 1568014460893,   // 事件推送时间
+          "T": 1568014460891,   // 撮合时间
+          "s":"BNBUSDT",        // 交易对
+          "b":"25.35190000",    // 买单最优挂单价格
+          "B":"31.21000000",    // 买单最优挂单数量
+          "a":"25.36520000",    // 卖单最优挂单价格
+          "A":"40.66000000"     // 卖单最优挂单数量
         }
-
         """
         pair = pair_exchange_to_std(msg['s'])
         last_price = Decimal(msg['c'])
@@ -144,14 +137,14 @@ class Binance(Feed):
                             receipt_timestamp=timestamp)
 
     async def _snapshot(self, pair: str) -> None:
-        url = '{self.rest_endpoint}/depth?symbol={pair}&limit={self.book_depth}'
-
+        url = f'{self.rest_endpoint}/depth?symbol={pair}&limit={self.book_depth}'
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 response.raise_for_status()
                 resp = await response.json()
 
                 std_pair = pair_exchange_to_std(pair)
+                LOG.warning("url = %s, last_update_id, %s", url, resp['lastUpdateId'])
                 self.last_update_id[std_pair] = resp['lastUpdateId']
                 self.l2_book[std_pair] = {BID: sd(), ASK: sd()}
                 for s, side in (('bids', BID), ('asks', ASK)):
@@ -163,13 +156,19 @@ class Binance(Feed):
     def _check_update_id(self, pair: str, msg: dict) -> (bool, bool):
         skip_update = False
         forced = not self.forced[pair]
-
+        LOG.warning("_check_update_id, forces=%s, msg=%s, last=%s", forced, msg['u'], self.last_update_id[pair])
         if forced and msg['u'] <= self.last_update_id[pair]:
             skip_update = True
+            LOG.warning("_check_update_id, skip_update=%s", skip_update)
+
         elif forced and msg['U'] <= self.last_update_id[pair] + 1 <= msg['u']:
+            LOG.warning("_check_update_id, skip_update=%s", skip_update)
+
             self.last_update_id[pair] = msg['u']
             self.forced[pair] = True
         elif not forced and self.last_update_id[pair] + 1 == msg['U']:
+            LOG.warning("_check_update_id, skip_update=%s", skip_update)
+
             self.last_update_id[pair] = msg['u']
         else:
             self._reset()
@@ -226,7 +225,8 @@ class Binance(Feed):
                     self.l2_book[pair][side][price] = amount
                     delta[side].append((price, amount))
 
-        await self.book_callback(self.l2_book[pair], L2_BOOK, pair, forced, delta, timestamp_normalize(self.id, ts), timestamp)
+        await self.book_callback(self.l2_book[pair], L2_BOOK, pair, forced, delta, timestamp_normalize(self.id, ts),
+                                 timestamp)
 
     async def _open_interest(self, pairs: list):
         """
@@ -293,7 +293,7 @@ class Binance(Feed):
         pair = pair.upper()
 
         if msg['e'] == 'depthUpdate':
-            await self._book(msg, pair, timestamp)
+            await self._book_ticker(msg, pair, timestamp)
         elif msg['e'] == 'aggTrade':
             await self._trade(msg, timestamp)
         elif msg['e'] == '24hrTicker':

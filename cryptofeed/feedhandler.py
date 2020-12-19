@@ -34,7 +34,7 @@ from cryptofeed.log import get_logger
 from cryptofeed.nbbo import NBBO
 
 
-LOG = logging.getLogger('feedhandler')
+LOG = logging.getLogger(__name__)
 
 
 # Maps string name to class name for use with config
@@ -270,9 +270,10 @@ class FeedHandler:
                 if feed.address is None:
                     await feed.subscribe(None)
                     return
-
+                LOG.info("feedhandler begin connect address=%s, origin=%s", feed.address, feed.origin)
                 async with websockets.connect(feed.address, ping_interval=10, ping_timeout=None,
                                               max_size=2**23, max_queue=2**23, origin=feed.origin) as websocket:
+                    LOG.info("feedhandler wss created uuid=%s", feed.uuid)
                     asyncio.ensure_future(self._watch(feed.uuid, websocket))
                     # connection was successful, reset retry count and delay
                     retries = 0

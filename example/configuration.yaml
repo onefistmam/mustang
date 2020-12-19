@@ -12,7 +12,7 @@ subscriptions:
         instruments:
           - ETH/USDT
         depth: 10
-#        type: swap
+        type: swap
 
 #    Bitmex:
 #        instruments:
