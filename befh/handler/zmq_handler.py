@@ -45,7 +45,7 @@ class ZmqHandler(Handler):
             "table_name": table_name,
             "data": native_fields
         }
-        LOGGER.info("zmq insert data:%s", data)
+        # LOGGER.info("zmq insert data:%s", data)
         self._socket.send_json(data)
 
     @staticmethod

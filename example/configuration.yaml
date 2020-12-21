@@ -1,9 +1,10 @@
 subscriptions:
-    Binance:
+    BinanceFutures:
         instruments:
-          - ETH/BTC
-          - XRP/BTC
+          - ETH-USDT
+          - XRP-USDT
         depth: 10
+        type: futures
 
 #    Bitmex:
 #        instruments:

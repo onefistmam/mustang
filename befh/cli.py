@@ -6,11 +6,12 @@ import logging
 
 import click
 import yaml
+import sys
 
 from befh import Configuration, Runner
 
 LOGGER = logging.getLogger(__name__)
-
+sys.setrecursionlimit(10000)
 
 @click.command()
 @click.option(
