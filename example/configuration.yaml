@@ -1,19 +1,21 @@
 subscriptions:
     BinanceFutures:
         instruments:
-          - ETH-USDT
-          - XRP-USDT
+            - BTC-USDT
+        #          - XRP-USDT
         depth: 10
         type: futures
 
-#    Bitmex:
-#        instruments:
-#            - ETHUSD
+    OKEx:
+        instruments:
+            - BTC-USDT-SWAP
+        depth: 10
+        type: swap
 
 handlers:
-#    sql:
-#        connection: "sqlite:///../order_book.db"
-#        is_rotate: True
-#        rotate_frequency: "%Y%m%d%H%M"
+    #    sql:
+    #        connection: "sqlite:///../order_book.db"
+    #        is_rotate: True
+    #        rotate_frequency: "%Y%m%d%H%M"
     zmq:
         connection: "tcp://*:9124"

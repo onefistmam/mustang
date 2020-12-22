@@ -57,7 +57,6 @@ class Exchange:
     def load(self, handlers, **kwargs):
         """Load.
         """
-        LOGGER.info('Loading exchange %s', self._name)
         self._load_handlers(handlers=handlers)
         self._load_instruments()
         self._load_depth()
@@ -92,7 +91,7 @@ class Exchange:
             assert isinstance(self._depth, int), (
                 "Depth ({}) must be an integer".format(
                     self._depth))
-            
+
     def _load_type(self):
         """Load type.
         """
@@ -100,8 +99,8 @@ class Exchange:
             self._type = self._config['type']
             assert isinstance(self._type, str), (
                 "Type ({}) must be an string".format(
-                    self._type))    
-        
+                    self._type))
+
     def _load_is_orders(self):
         """Load is_orders.
         """
@@ -109,4 +108,4 @@ class Exchange:
             self._is_orders = self._config['is_orders']
             assert isinstance(self._is_orders, bool), (
                 "is_orders ({}) must be an boolean".format(
-                    self._is_orders))    
+                    self._is_orders))

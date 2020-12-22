@@ -12,7 +12,8 @@ import zlib
 from sortedcontainers import SortedDict as sd
 from yapic import json
 
-from cryptofeed.defines import ASK, BID, BUY, FUNDING, L2_BOOK, OKCOIN, OPEN_INTEREST, SELL, TICKER, TRADES, LIQUIDATIONS
+from cryptofeed.defines import ASK, BID, BUY, FUNDING, L2_BOOK, OKCOIN, OPEN_INTEREST, SELL, TICKER, TRADES, \
+    LIQUIDATIONS, BOOK_TICKER
 from cryptofeed.exceptions import BadChecksum
 from cryptofeed.feed import Feed
 from cryptofeed.standards import pair_exchange_to_std, timestamp_normalize
@@ -26,7 +27,7 @@ class OKCoin(Feed):
 
     def __init__(self, pairs=None, channels=None, callbacks=None, **kwargs):
         super().__init__('wss://real.okcoin.com:8443/ws/v3', pairs=pairs, channels=channels, callbacks=callbacks, **kwargs)
-        self.book_depth = 200
+        self.book_depth = 100
         self.open_interest = {}
 
     def __reset(self):
@@ -83,15 +84,29 @@ class OKCoin(Feed):
 
     async def _ticker(self, msg: dict, timestamp: float):
         """
-        {'table': 'spot/ticker', 'data': [{'instrument_id': 'BTC-USD', 'last': '3977.74', 'best_bid': '3977.08', 'best_ask': '3978.73', 'open_24h': '3978.21', 'high_24h': '3995.43', 'low_24h': '3961.02', 'base_volume_24h': '248.245', 'quote_volume_24h': '988112.225861', 'timestamp': '2019-03-22T22:26:34.019Z'}]}
+        instrument_id 	String 	合约名称，如BTC-USD-SWAP
+        best_bid 	String 	买一价
+        best_ask 	String 	卖一价
+        last 	    String 	最新成交价
+        high_24h 	String 	24小时最高价
+        low_24h 	String 	24小时最低价
+        volume_24h 	String 	24小时成交量（按张数统计）
+        volume_token_24h 	String 	24小时成交量（按币统计）
+        timestamp 	String 	系统时间戳
+        open_interest 	String 	持仓量
+        open_24h 	String 	24小时开盘价
+        last_qty 	String 	最新成交的数量
+        best_ask_size 	String 	卖一价对应的量
+        best_bid_size 	String 	买一价对应的数量
         """
         for update in msg['data']:
             pair = update['instrument_id']
             update_timestamp = timestamp_normalize(self.id, update['timestamp'])
-            await self.callback(TICKER, feed=self.id,
+            await self.callback(BOOK_TICKER, feed=self.id,
                                 pair=pair,
-                                bid=Decimal(update['best_bid']),
-                                ask=Decimal(update['best_ask']),
+                                last_price=Decimal(update['last']),
+                                first_bid=Decimal(update['best_bid']),
+                                first_ask=Decimal(update['best_ask']),
                                 timestamp=update_timestamp,
                                 receipt_timestamp=timestamp)
             if 'open_interest' in update:

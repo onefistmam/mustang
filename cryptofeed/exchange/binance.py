@@ -15,10 +15,10 @@ import aiohttp
 from sortedcontainers import SortedDict as sd
 from yapic import json
 
-from cryptofeed.defines import BID, ASK, BINANCE, BUY, FUNDING, L2_BOOK, LIQUIDATIONS, OPEN_INTEREST, SELL, TICKER, TRADES
+from cryptofeed.defines import BID, ASK, BINANCE, BUY, FUNDING, L2_BOOK, LIQUIDATIONS, OPEN_INTEREST, SELL, TICKER, \
+    TRADES, BOOK_TICKER
 from cryptofeed.feed import Feed
 from cryptofeed.standards import pair_exchange_to_std, timestamp_normalize
-
 
 LOG = logging.getLogger('feedhandler')
 
@@ -79,38 +79,53 @@ class Binance(Feed):
     async def _ticker(self, msg: dict, timestamp: float):
         """
         {
-        "e": "24hrTicker",  // Event type
-        "E": 123456789,     // Event time
-        "s": "BNBBTC",      // Symbol
-        "p": "0.0015",      // Price change
-        "P": "250.00",      // Price change percent
-        "w": "0.0018",      // Weighted average price
-        "x": "0.0009",      // Previous day's close price
-        "c": "0.0025",      // Current day's close price
-        "Q": "10",          // Close trade's quantity
-        "b": "0.0024",      // Best bid price
-        "B": "10",          // Best bid quantity
-        "a": "0.0026",      // Best ask price
-        "A": "100",         // Best ask quantity
-        "o": "0.0010",      // Open price
-        "h": "0.0025",      // High price
-        "l": "0.0010",      // Low price
-        "v": "10000",       // Total traded base asset volume
-        "q": "18",          // Total traded quote asset volume
-        "O": 0,             // Statistics open time
-        "C": 86400000,      // Statistics close time
-        "F": 0,             // First trade ID
-        "L": 18150,         // Last trade Id
-        "n": 18151          // Total number of trades
+          "e":"bookTicker",     // 事件类型
+          "u":400900217,        // 更新ID
+          "E": 1568014460893,   // 事件推送时间
+          "T": 1568014460891,   // 撮合时间
+          "s":"BNBUSDT",        // 交易对
+          "b":"25.35190000",    // 买单最优挂单价格
+          "B":"31.21000000",    // 买单最优挂单数量
+          "a":"25.36520000",    // 卖单最优挂单价格
+          "A":"40.66000000"     // 卖单最优挂单数量
         }
         """
         pair = pair_exchange_to_std(msg['s'])
         bid = Decimal(msg['b'])
         ask = Decimal(msg['a'])
+        last_price = (bid + ask) / 2
         await self.callback(TICKER, feed=self.id,
                             pair=pair,
-                            bid=bid,
-                            ask=ask,
+                            last_price=last_price,
+                            first_bid=bid,
+                            first_ask=ask,
+                            timestamp=timestamp_normalize(self.id, msg['E']),
+                            receipt_timestamp=timestamp)
+
+    async def _book_ticker(self, msg: dict, timestamp: float):
+        """
+        {
+          "e":"bookTicker",     // 事件类型
+          "u":400900217,        // 更新ID
+          "E": 1568014460893,   // 事件推送时间
+          "T": 1568014460891,   // 撮合时间
+          "s":"BNBUSDT",        // 交易对
+          "b":"25.35190000",    // 买单最优挂单价格
+          "B":"31.21000000",    // 买单最优挂单数量
+          "a":"25.36520000",    // 卖单最优挂单价格
+          "A":"40.66000000"     // 卖单最优挂单数量
+        }
+        """
+        pair = pair_exchange_to_std(msg['s'])
+        bid = Decimal(msg['b'])
+        ask = Decimal(msg['a'])
+        last_price = (bid + ask) / 2
+        #self, feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp
+        await self.callback(BOOK_TICKER, feed=self.id,
+                            pair=pair,
+                            last_price=last_price,
+                            first_bid=bid,
+                            first_ask=ask,
                             timestamp=timestamp_normalize(self.id, msg['E']),
                             receipt_timestamp=timestamp)
 
@@ -228,7 +243,8 @@ class Binance(Feed):
                     self.l2_book[pair][side][price] = amount
                     delta[side].append((price, amount))
 
-        await self.book_callback(self.l2_book[pair], L2_BOOK, pair, forced, delta, timestamp_normalize(self.id, ts), timestamp)
+        await self.book_callback(self.l2_book[pair], L2_BOOK, pair, forced, delta, timestamp_normalize(self.id, ts),
+                                 timestamp)
 
     async def _open_interest(self, pairs: list):
         """
@@ -294,6 +310,8 @@ class Binance(Feed):
 
         pair = pair.upper()
 
+        if msg['e'] == 'bookTicker':
+            await self._book_ticker(msg, pair, timestamp)
         if msg['e'] == 'depthUpdate':
             await self._book(msg, pair, timestamp)
         elif msg['e'] == 'aggTrade':

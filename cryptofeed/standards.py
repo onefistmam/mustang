@@ -19,7 +19,7 @@ from cryptofeed.defines import (BINANCE, BINANCE_DELIVERY, BINANCE_FUTURES, BINA
                                 KRAKEN, KRAKEN_FUTURES, OKCOIN, OKEX, POLONIEX, PROBIT, UPBIT, WHALE_ALERT)
 from cryptofeed.defines import (FILL_OR_KILL, IMMEDIATE_OR_CANCEL, LIMIT, MAKER_OR_CANCEL, MARKET, UNSUPPORTED)
 from cryptofeed.defines import (FUNDING, FUTURES_INDEX, L2_BOOK, L3_BOOK, LIQUIDATIONS, OPEN_INTEREST, MARKET_INFO,
-                                TICKER, TRADES, TRANSACTIONS, VOLUME)
+                                TICKER, TRADES, TRANSACTIONS, VOLUME, BOOK_TICKER)
 from cryptofeed.exceptions import UnsupportedDataFeed, UnsupportedTradingOption, UnsupportedTradingPair
 from cryptofeed.pairs import gen_pairs, _exchange_info
 
@@ -210,6 +210,37 @@ _feed_to_exchange_map = {
         GATEIO: UNSUPPORTED,
         PROBIT: UNSUPPORTED
     },
+    BOOK_TICKER: {
+        POLONIEX: 1002,
+        HITBTC: 'subscribeTicker',
+        BITFINEX: 'ticker',
+        BITSTAMP: UNSUPPORTED,
+        COINBASE: 'ticker',
+        BITMEX: 'quote',
+        KRAKEN: TICKER,
+        KRAKEN_FUTURES: 'ticker_lite',
+        BINANCE: 'ticker',
+        BINANCE_US: 'ticker',
+        BINANCE_FUTURES: 'book_ticker',
+        BINANCE_DELIVERY: 'ticker',
+        BLOCKCHAIN: UNSUPPORTED,
+        HUOBI: UNSUPPORTED,
+        HUOBI_DM: UNSUPPORTED,
+        OKCOIN: '{}/ticker',
+        OKEX: '{}/ticker',
+        COINBENE: TICKER,
+        DERIBIT: "ticker",
+        BYBIT: UNSUPPORTED,
+        FTX: "ticker",
+        FTX_US: "ticker",
+        GEMINI: UNSUPPORTED,
+        BITTREX: 'SubscribeToSummaryDeltas',
+        BITCOINCOM: 'subscribeTicker',
+        BITMAX: UNSUPPORTED,
+        UPBIT: UNSUPPORTED,
+        GATEIO: UNSUPPORTED,
+        PROBIT: UNSUPPORTED
+    },
     VOLUME: {
         POLONIEX: 1003
     },
@@ -304,6 +335,7 @@ def normalize_trading_options(exchange, option):
 
 
 def feed_to_exchange(exchange, feed, silent=False):
+    LOG.warning("feed_to_exchange, feed=%s, exchange=%s", feed, exchange)
     def raise_error():
         exception = UnsupportedDataFeed(f"{feed} is not currently supported on {exchange}")
         if not silent:

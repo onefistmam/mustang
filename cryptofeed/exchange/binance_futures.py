@@ -41,8 +41,8 @@ class BinanceFutures(Binance):
                 address += stream
         if address == f"{self.ws_endpoint}/stream?streams=":
             return None
+        LOG.warning("address load self.address= %s", address)
 
-        LOG.error("addres= %s", address)
         return address[:-1]
 
     def _check_update_id(self, pair: str, msg: dict) -> (bool, bool):
@@ -73,11 +73,11 @@ class BinanceFutures(Binance):
         pair = pair.upper()
 
         msg_type = msg.get('e')
-        if msg_type is None:
+        if msg_type == 'bookTicker':
             # For the BinanceFutures API it appears
             # the ticker stream (<symbol>@bookTicker) is
             # the only payload without an "e" key describing the event type
-            await self._ticker(msg, timestamp)
+            await self._book_ticker(msg, timestamp)
         elif msg_type == '24hrTicker':
             await self._24hticker(msg, timestamp)
         elif msg_type == 'depthUpdate':
@@ -117,9 +117,13 @@ class BinanceFutures(Binance):
         pair = pair_exchange_to_std(msg['s'])
         last_price = Decimal(msg['c'])
         avg_price = Decimal(msg['w'])
+        first_bid = Decimal(msg['b'])
+        first_ask = Decimal(msg['a'])
         await self.callback(TICKER, feed=self.id,
                             pair=pair,
                             last_price=last_price,
                             avg_price=avg_price,
+                            first_bid=first_bid,
+                            first_ask=first_ask,
                             timestamp=timestamp_normalize(self.id, msg['E']),
                             receipt_timestamp=timestamp)

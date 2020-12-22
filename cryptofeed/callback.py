@@ -37,7 +37,8 @@ class TradeCallback(Callback):
         self.include_order_type = include_order_type
         super().__init__(callback)
 
-    async def __call__(self, *, feed: str, pair: str, side: str, amount: Decimal, price: Decimal, order_id=None, timestamp: float, receipt_timestamp: float, order_type: str = None):
+    async def __call__(self, *, feed: str, pair: str, side: str, amount: Decimal, price: Decimal, order_id=None,
+                       timestamp: float, receipt_timestamp: float, order_type: str = None):
         kwargs = {}
         if self.include_order_type:
             kwargs['order_type'] = order_type
@@ -45,14 +46,22 @@ class TradeCallback(Callback):
 
 
 class TickerCallback(Callback):
-    async def __call__(self, *, feed: str, pair: str, last_price: Decimal, avg_price: Decimal, timestamp: float, receipt_timestamp: float):
-        await super().__call__(feed, pair, last_price, avg_price, timestamp, receipt_timestamp)
+    async def __call__(self, *, feed: str, pair: str, last_price: Decimal, first_bid: Decimal, first_ask: Decimal,
+                       timestamp: float, receipt_timestamp: float):
+        await super().__call__(feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp)
+
+
+class BookTickerCallback(Callback):
+    async def __call__(self, *, feed: str, pair: str, last_price: Decimal, first_bid: Decimal, first_ask: Decimal,
+                       timestamp: float, receipt_timestamp: float):
+        await super().__call__(feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp)
 
 
 class BookCallback(Callback):
     """
     For full L2/L3 book updates
     """
+
     async def __call__(self, *, feed: str, pair: str, book: dict, timestamp: float, receipt_timestamp: float):
         await super().__call__(feed, pair, book, timestamp, receipt_timestamp)
 
@@ -61,6 +70,7 @@ class BookUpdateCallback(Callback):
     """
     For Book Deltas
     """
+
     async def __call__(self, *, feed: str, pair: str, delta: dict, timestamp: float, receipt_timestamp: float):
         """
         Delta is in format of:
@@ -74,7 +84,8 @@ class BookUpdateCallback(Callback):
 
 
 class LiquidationCallback(Callback):
-    async def __call__(self, *, feed: str, pair: str, side: str, leaves_qty: Decimal, price: Decimal, order_id: str, timestamp: float, receipt_timestamp: float):
+    async def __call__(self, *, feed: str, pair: str, side: str, leaves_qty: Decimal, price: Decimal, order_id: str,
+                       timestamp: float, receipt_timestamp: float):
         await super().__call__(feed, pair, side, leaves_qty, price, order_id, timestamp, receipt_timestamp)
 
 
