@@ -6,11 +6,11 @@ subscriptions:
         depth: 10
         type: futures
 
-    OKEx:
-        instruments:
-            - BTC-USDT-SWAP
-        depth: 10
-        type: swap
+#    OKEx:
+#        instruments:
+#            - BTC-USDT-SWAP
+#        depth: 10
+#        type: swap
 
 handlers:
     #    sql:

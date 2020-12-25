@@ -71,12 +71,15 @@ class OKCoin(Feed):
                 if chan == LIQUIDATIONS:
                     continue
                 args = [f"{chan_format(chan, pair)}:{pair}" for pair in self.config[chan]]
+                LOG.warning("args=%s", args)
                 await websocket.send(json.dumps({
                     "op": "subscribe",
                     "args": args
                 }))
         else:
             chans = [f"{chan_format(chan, pair)}:{pair}" for chan in self.channels for pair in self.pairs if chan != LIQUIDATIONS]
+            LOG.warning("chans=%s", chans)
+
             await websocket.send(json.dumps({
                 "op": "subscribe",
                 "args": chans

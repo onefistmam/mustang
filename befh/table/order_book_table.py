@@ -118,6 +118,15 @@ class OrderBook(Table):
 
         return fields
 
+    def _get_asks(self):
+        return self._asks
+
+    def _get_bids(self):
+        return self._bids
+
+    def _get_trades(self):
+        return self._trade
+
     def create_table(self, handler):
         """Create table.
         """

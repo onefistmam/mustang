@@ -42,19 +42,14 @@ class WebsocketExchange(RestApiExchange):
         LOGGER.info("exchange load %s", self._name)
         contract_exchanges_use_common_channel = ['HuobiSwap', 'HuibiDM', 'KrakenFutures', 'BinanceFutures', 'Bitmex']
         if self._is_orders:
-            # if self._type == 'spot' or self._name in contract_exchanges_use_common_channel:
-            #     channels = [TRADES, L2_BOOK, BOOK_TICKER]
-            # el
             if self._type == 'futures':
-                channels = [L2_BOOK, BOOK_TICKER]
+                channels = [TRADES, L2_BOOK, BOOK_TICKER]
             elif self._type == 'swap':
-                channels = [L2_BOOK, BOOK_TICKER]
-
+                channels = [TRADES, L2_BOOK, BOOK_TICKER]
             LOGGER.info("channel %s ", channels)
             callbacks = {
-                # channels[0]: TradeCallback(self._update_trade_callback),
+                TRADES: TradeCallback(self._update_trade_callback),
                 L2_BOOK: BookCallback(self._update_order_book_callback),
-                # TICKER: TickerCallback(self._update_ticker_callback),
                 BOOK_TICKER: BookTickerCallback(self._update_book_ticker_callback)
             }
         else:
@@ -121,7 +116,7 @@ class WebsocketExchange(RestApiExchange):
         """Update order book callback.
         """
 
-        LOGGER.info("order_book_callback,pair=%s, feed=%s, boo=%s", pair, feed, book)
+        # LOGGER.info("order_book_callback,pair=%s, feed=%s, boo=%s", pair, feed, book)
         if pair in self._instrument_mapping:
             # The instrument pair can be mapped directly from crypofeed
             # format to the ccxt format
@@ -148,11 +143,12 @@ class WebsocketExchange(RestApiExchange):
         if not is_updated:
             return
 
+        LOGGER.info("order_book_callback, symbol=%s, feed=%s first_bid=%s, first_ask=%s", pair, feed, instmt_info._get_asks()[0][0], instmt_info._get_bids()[0][0])
+
     def _update_trade_callback(
         self, feed, pair, order_id, timestamp, side, amount, price, receipt_timestamp):
         """Update trade callback.
         """
-        # LOGGER.info("_update_trade_callback,amount =%s", amount)
         instmt_info = self._instruments[self._instrument_mapping[pair]]
         trade = {}
 
@@ -173,9 +169,17 @@ class WebsocketExchange(RestApiExchange):
         current_timestamp = datetime.utcnow()
         if not instmt_info.update_trade(trade, current_timestamp):
             return
-        for handler in self._handlers.values():
-            instmt_info.update_table(handler=handler)
-        self._rotate_ordre_tables()
+
+        trades = instmt_info._get_trades()
+        price = trade['price']
+        amount = trade['amount']
+        id = trade['id']
+        timestamp = trade['timestamp']
+        LOGGER.info("trade_callback pair=%s, feed=%s, price=%f, amount=%f, id=%s, time=%f", pair, feed, price, amount, id, timestamp)
+        return
+        # for handler in self._handlers.values():
+        #     instmt_info.update_table(handler=handler)
+        # self._rotate_ordre_tables()
 
     # (feed, pair, bid, ask, timestamp, receipt_timestamp)
     def _update_ticker_callback(self, feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp):
@@ -187,10 +191,10 @@ class WebsocketExchange(RestApiExchange):
     # (feed, pair, bid, ask, timestamp, receipt_timestamp)
     def _update_book_ticker_callback(self, feed, pair, last_price, first_bid, first_ask, timestamp,
                                      receipt_timestamp=None):
-        if (feed == OKEX):
-            LOGGER.info(
-                "_update_book_ticker_callback, feed=%s, pair=%s, last_price=%f, first_bid=%f, first_ask=%f, timestamp =%f, receipt_timestamp=%f",
-                feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp)
+        # if (feed == OKEX):
+        LOGGER.info(
+            "_update_book_ticker_callback, feed=%s, pair=%s, last_price=%f, first_bid=%f, first_ask=%f, timestamp =%f, receipt_timestamp=%f",
+            feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp)
 
     def _check_valid_instrument(self):
         """Check valid instrument.
