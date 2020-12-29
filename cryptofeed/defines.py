@@ -43,7 +43,7 @@ UPBIT = 'UPBIT'
 
 COINGECKO = 'COINGECKO'
 WHALE_ALERT = 'WHALE_ALERT'
-
+KLINE = 'kline'
 
 L2_BOOK = 'l2_book'
 L3_BOOK = 'l3_book'

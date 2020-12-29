@@ -11,7 +11,7 @@ from logging.handlers import RotatingFileHandler
 FORMAT = logging.Formatter('%(asctime)-15s : %(levelname)s : %(message)s')
 
 
-def get_logger(name, filename, level=logging.WARNING):
+def get_logger(name, filename, level=logging.INFO):
     logger = logging.getLogger(name)
     logger.setLevel(level)
 

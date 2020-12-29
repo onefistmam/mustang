@@ -9,7 +9,7 @@ import logging
 
 from yapic import json
 
-from cryptofeed.defines import BINANCE_FUTURES, OPEN_INTEREST, TICKER, BOOK_TICKER
+from cryptofeed.defines import BINANCE_FUTURES, OPEN_INTEREST, TICKER, BOOK_TICKER, KLINE
 from cryptofeed.exchange.binance import Binance
 from cryptofeed.standards import pair_exchange_to_std, timestamp_normalize
 
@@ -32,10 +32,13 @@ class BinanceFutures(Binance):
                 continue
             for pair in self.pairs if not self.config else self.config[chan]:
                 pair = pair.lower()
+                LOG.warning("address load pair=%s, chan=%s", pair, chan)
                 if chan == BOOK_TICKER:
                     stream = f"{pair}@bookTicker/"
                 elif chan == TICKER:
                     stream = f"{pair}@ticker/"
+                elif chan == KLINE:
+                    stream = f"{pair}@kline_1m/"
                 else:
                     stream = f"{pair}@{chan}/"
                 address += stream
@@ -88,6 +91,8 @@ class BinanceFutures(Binance):
             await self._liquidations(msg, timestamp)
         elif msg_type == 'markPriceUpdate':
             await self._funding(msg, timestamp)
+        elif msg_type == 'kline':
+            await self.continuousKline(msg, timestamp)
         else:
             LOG.warning("%s: Unexpected message received: %s, msg_type:%s", self.id, msg, msg_type)
 

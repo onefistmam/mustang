@@ -100,8 +100,8 @@ class FeedHandler:
         self.handler_enabled = handler_enabled
         self.config = Config(file_name=config)
 
-        lfile = 'feedhandler.log' if not self.config or not self.config.log.filename else self.config.log.filename
-        level = logging.WARNING if not self.config or not self.config.log.level else self.config.log.level
+        lfile = '/data/logs/mustang/info.log' if not self.config or not self.config.log.filename else self.config.log.filename
+        level = logging.INFO if not self.config or not self.config.log.level else self.config.log.level
         get_logger('feedhandler', lfile, level)
 
     def playback(self, feed, filenames):

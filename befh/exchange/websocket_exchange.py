@@ -4,13 +4,13 @@ import re
 
 from cryptofeed import FeedHandler
 from cryptofeed.defines import L2_BOOK, TRADES, BID, ASK, \
-    TICKER, BOOK_TICKER, OKEX
-from cryptofeed.callback import BookCallback, TradeCallback, TickerCallback, BookTickerCallback
+    TICKER, BOOK_TICKER, OKEX, KLINE
+from cryptofeed.callback import BookCallback, TradeCallback, TickerCallback, BookTickerCallback, KlineCallback
 import cryptofeed.exchanges as cryptofeed_exchanges
 
 from .rest_api_exchange import RestApiExchange
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("feedhandler")
 
 FULL_UTC_PATTERN = '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z'
 
@@ -43,24 +43,26 @@ class WebsocketExchange(RestApiExchange):
         contract_exchanges_use_common_channel = ['HuobiSwap', 'HuibiDM', 'KrakenFutures', 'BinanceFutures', 'Bitmex']
         if self._is_orders:
             if self._type == 'futures':
-                channels = [TRADES, L2_BOOK, BOOK_TICKER]
+                channels = [L2_BOOK, BOOK_TICKER, KLINE]
             elif self._type == 'swap':
                 channels = [TRADES, L2_BOOK, BOOK_TICKER]
             LOGGER.info("channel %s ", channels)
             callbacks = {
                 TRADES: TradeCallback(self._update_trade_callback),
                 L2_BOOK: BookCallback(self._update_order_book_callback),
-                BOOK_TICKER: BookTickerCallback(self._update_book_ticker_callback)
+                BOOK_TICKER: BookTickerCallback(self._update_book_ticker_callback),
+                KLINE: KlineCallback(self._update_kline_callback),
             }
         else:
             if self._type == 'spot' or self._name in contract_exchanges_use_common_channel:
                 channels = [TRADES]
             elif self._type == 'futures':
-                channels = [TRADES]
+                channels = [TRADES, KLINE]
             elif self._type == 'swap':
                 channels = [TRADES]
             callbacks = {
                 channels[0]: TradeCallback(self._update_trade_callback),
+                KLINE: KlineCallback(self._update_kline_callback),
             }
         if self._name.lower() == 'poloniex':
             self._feed_handler.add_feed(
@@ -143,7 +145,8 @@ class WebsocketExchange(RestApiExchange):
         if not is_updated:
             return
 
-        LOGGER.info("order_book_callback, symbol=%s, feed=%s first_bid=%s, first_ask=%s", pair, feed, instmt_info._get_asks()[0][0], instmt_info._get_bids()[0][0])
+        # LOGGER.info("order_book_callback, symbol=%s, feed=%s first_bid=%s, first_ask=%s", pair, feed,
+        #             instmt_info._get_asks()[0][0], instmt_info._get_bids()[0][0])
 
     def _update_trade_callback(
         self, feed, pair, order_id, timestamp, side, amount, price, receipt_timestamp):
@@ -175,7 +178,8 @@ class WebsocketExchange(RestApiExchange):
         amount = trade['amount']
         id = trade['id']
         timestamp = trade['timestamp']
-        LOGGER.info("trade_callback pair=%s, feed=%s, price=%f, amount=%f, id=%s, time=%f", pair, feed, price, amount, id, timestamp)
+        # LOGGER.info("trade_callback pair=%s, feed=%s, price=%f, amount=%f, id=%s, time=%f", pair, feed, price, amount,
+        #             id, timestamp)
         return
         # for handler in self._handlers.values():
         #     instmt_info.update_table(handler=handler)
@@ -189,12 +193,13 @@ class WebsocketExchange(RestApiExchange):
         return
 
     # (feed, pair, bid, ask, timestamp, receipt_timestamp)
+    def _update_kline_callback(self, feed, pair, timestamp, receipt_timestamp, kline):
+        self._price_strategy.update_kline_queue(feed=feed, pair=pair, timestamp=timestamp, kline=kline)
+
+    # (feed, pair, bid, ask, timestamp, receipt_timestamp)
     def _update_book_ticker_callback(self, feed, pair, last_price, first_bid, first_ask, timestamp,
                                      receipt_timestamp=None):
-        # if (feed == OKEX):
-        LOGGER.info(
-            "_update_book_ticker_callback, feed=%s, pair=%s, last_price=%f, first_bid=%f, first_ask=%f, timestamp =%f, receipt_timestamp=%f",
-            feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp)
+        self._price_strategy.update_price_queue(feed=feed, pair=pair, timestamp=timestamp, price=last_price)
 
     def _check_valid_instrument(self):
         """Check valid instrument.

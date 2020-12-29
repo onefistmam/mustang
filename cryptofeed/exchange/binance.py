@@ -16,7 +16,7 @@ from sortedcontainers import SortedDict as sd
 from yapic import json
 
 from cryptofeed.defines import BID, ASK, BINANCE, BUY, FUNDING, L2_BOOK, LIQUIDATIONS, OPEN_INTEREST, SELL, TICKER, \
-    TRADES, BOOK_TICKER
+    TRADES, BOOK_TICKER, KLINE
 from cryptofeed.feed import Feed
 from cryptofeed.standards import pair_exchange_to_std, timestamp_normalize
 
@@ -298,6 +298,40 @@ class Binance(Feed):
                             mark_price=msg['p'],
                             rate=msg['r'],
                             next_funding_time=timestamp_normalize(self.id, msg['T']),
+                            )
+
+    async def continuousKline(self, msg: dict, timestamp: float):
+        """{
+          "e":"continuous_kline",   // 事件类型
+          "E":1607443058651,        // 事件时间
+          "ps":"BTCUSDT",           // 标的交易对
+          "ct":"PERPETUAL",         // 合约类型
+          "k":{
+            "t":1607443020000,      // 这根K线的起始时间
+            "T":1607443079999,      // 这根K线的结束时间
+            "i":"1m",               // K线间隔
+            "f":116467658886,       // 这根K线期间第一笔成交ID
+            "L":116468012423,       // 这根K线期间末一笔成交ID
+            "o":"18787.00",         // 这根K线期间第一笔成交价
+            "c":"18804.04",         // 这根K线期间末一笔成交价
+            "h":"18804.04",         // 这根K线期间最高成交价
+            "l":"18786.54",         // 这根K线期间最低成交价
+            "v":"197.664",          // 这根K线期间成交量
+            "n":543,                // 这根K线期间成交笔数
+            "x":false,              // 这根K线是否完结(是否已经开始下一根K线)
+            "q":"3715253.19494",    // 这根K线期间成交额
+            "V":"184.769",          // 主动买入的成交量
+            "Q":"3472925.84746",    // 主动买入的成交额
+            "B":"0"                 // 忽略此参数
+          }
+        }
+        """
+        await self.callback(KLINE,
+                            feed=self.id,
+                            pair=pair_exchange_to_std(msg['s']),
+                            timestamp=timestamp_normalize(self.id, msg['E']),
+                            receipt_timestamp=timestamp,
+                            kline=msg['k']
                             )
 
     async def message_handler(self, msg: str, timestamp: float):

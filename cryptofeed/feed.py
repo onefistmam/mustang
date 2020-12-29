@@ -10,7 +10,7 @@ from collections import defaultdict
 
 from cryptofeed.callback import Callback
 from cryptofeed.defines import (ASK, BID, BOOK_DELTA, FUNDING, FUTURES_INDEX, L2_BOOK, L3_BOOK, LIQUIDATIONS,
-                                OPEN_INTEREST, MARKET_INFO, TICKER, TRADES, TRANSACTIONS, VOLUME, BOOK_TICKER)
+                                OPEN_INTEREST, MARKET_INFO, TICKER, TRADES, TRANSACTIONS, VOLUME, BOOK_TICKER, KLINE)
 from cryptofeed.exceptions import BidAskOverlapping, UnsupportedDataFeed
 from cryptofeed.standards import feed_to_exchange, get_exchange_info, load_exchange_pair_mapping, pair_std_to_exchange
 from cryptofeed.util.book import book_delta, depth
@@ -71,7 +71,6 @@ class Feed:
             self.pairs = [pair_std_to_exchange(pair, self.id) for pair in pairs]
         if channels:
             LOG.error("feed self.channels= %s", channels)
-
             self.channels = list(set([feed_to_exchange(self.id, chan) for chan in channels]))
 
         self.l3_book = {}
@@ -87,7 +86,8 @@ class Feed:
                           BOOK_TICKER: Callback(None),
                           TRADES: Callback(None),
                           TRANSACTIONS: Callback(None),
-                          VOLUME: Callback(None)
+                          VOLUME: Callback(None),
+                          KLINE: Callback(None)
                           }
 
         if callbacks:

@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 
+from befh.strategy import PriceStrategy
 from befh.table.order_book_table import OrderBook
 
 LOGGER = logging.getLogger(__name__)
@@ -29,12 +30,19 @@ class Exchange:
         self._last_request_time = datetime(1990, 1, 1)
         self._exchange_interface = None
         self._handlers = {}
+        self._price_strategy = PriceStrategy(name=name)
 
     @classmethod
     def get_order_book_class(cls):
         """Get order book class.
         """
         return OrderBook
+
+    @classmethod
+    def get_price_strategy(cls):
+        """Get order book class.
+        """
+        return PriceStrategy
 
     @property
     def name(self):
