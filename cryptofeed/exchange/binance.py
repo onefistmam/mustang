@@ -118,14 +118,16 @@ class Binance(Feed):
         """
         pair = pair_exchange_to_std(msg['s'])
         bid = Decimal(msg['b'])
+        bid_size = Decimal(msg['B'])
         ask = Decimal(msg['a'])
-        last_price = (bid + ask) / 2
+        ask_size = Decimal(msg['A'])
         #self, feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp
         await self.callback(BOOK_TICKER, feed=self.id,
                             pair=pair,
-                            last_price=last_price,
-                            first_bid=bid,
-                            first_ask=ask,
+                            best_bid=bid,
+                            best_bid_size=bid_size,
+                            best_ask=ask,
+                            best_ask_size=ask_size,
                             timestamp=timestamp_normalize(self.id, msg['E']),
                             receipt_timestamp=timestamp)
 

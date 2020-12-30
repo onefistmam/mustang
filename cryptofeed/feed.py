@@ -70,7 +70,6 @@ class Feed:
         if pairs:
             self.pairs = [pair_std_to_exchange(pair, self.id) for pair in pairs]
         if channels:
-            LOG.error("feed self.channels= %s", channels)
             self.channels = list(set([feed_to_exchange(self.id, chan) for chan in channels]))
 
         self.l3_book = {}

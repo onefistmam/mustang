@@ -131,22 +131,16 @@ class WebsocketExchange(RestApiExchange):
         asks = []
         order_book['bids'] = bids
         order_book['asks'] = asks
-
         for price, volume in book[BID].items():
             bids.append((float(price), float(volume)))
-
         for price, volume in book[ASK].items():
             asks.append((float(price), float(volume)))
-
         is_updated = instmt_info.update_bids_asks(
             bids=bids,
             asks=asks)
-
         if not is_updated:
             return
-
-        # LOGGER.info("order_book_callback, symbol=%s, feed=%s first_bid=%s, first_ask=%s", pair, feed,
-        #             instmt_info._get_asks()[0][0], instmt_info._get_bids()[0][0])
+        self._quotes_store.update_depth(feed=feed, pair=pair, timestamp=timestamp, bids=bids, asks=asks)
 
     def _update_trade_callback(
         self, feed, pair, order_id, timestamp, side, amount, price, receipt_timestamp):
@@ -194,12 +188,15 @@ class WebsocketExchange(RestApiExchange):
 
     # (feed, pair, bid, ask, timestamp, receipt_timestamp)
     def _update_kline_callback(self, feed, pair, timestamp, receipt_timestamp, kline):
-        self._price_strategy.update_kline_queue(feed=feed, pair=pair, timestamp=timestamp, kline=kline)
+        self._quotes_store.update_kline_queue(feed=feed, pair=pair, timestamp=timestamp, kline=kline)
 
     # (feed, pair, bid, ask, timestamp, receipt_timestamp)
-    def _update_book_ticker_callback(self, feed, pair, last_price, first_bid, first_ask, timestamp,
+    def _update_book_ticker_callback(self, feed, pair, best_bid, best_bid_size, best_ask, best_ask_size,
+                                     timestamp,
                                      receipt_timestamp=None):
-        self._price_strategy.update_price_queue(feed=feed, pair=pair, timestamp=timestamp, price=last_price)
+        self._quotes_store.update_price_queue(feed=feed, pair=pair, timestamp=timestamp, best_bid=best_bid,
+                                              best_bid_size=best_bid_size, best_ask=best_ask,
+                                              best_ask_size=best_ask_size)
 
     def _check_valid_instrument(self):
         """Check valid instrument.

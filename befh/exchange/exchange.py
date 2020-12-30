@@ -1,7 +1,8 @@
 import logging
 from datetime import datetime
 
-from befh.strategy import PriceStrategy
+from befh.strategy import QuotesStore
+from befh.strategy.strategy_handler import StrategyHandler
 from befh.table.order_book_table import OrderBook
 
 LOGGER = logging.getLogger(__name__)
@@ -30,19 +31,14 @@ class Exchange:
         self._last_request_time = datetime(1990, 1, 1)
         self._exchange_interface = None
         self._handlers = {}
-        self._price_strategy = PriceStrategy(name=name)
+        self._quotes_store = {}
+        self._strategy_handler = {}
 
     @classmethod
     def get_order_book_class(cls):
         """Get order book class.
         """
         return OrderBook
-
-    @classmethod
-    def get_price_strategy(cls):
-        """Get order book class.
-        """
-        return PriceStrategy
 
     @property
     def name(self):
@@ -80,12 +76,15 @@ class Exchange:
         """Load instruments.
         """
         instruments = self._config['instruments']
+
         for symbol in instruments:
             instmt_info = self.DEFAULT_ORDER_BOOK_CLASS(
                 exchange=self._name,
                 symbol=symbol)
             self._instruments[symbol] = instmt_info
-
+            self._quotes_store = QuotesStore(feed=self.name, pair=symbol)
+            self._strategy_handler = StrategyHandler(self._quotes_store)
+            self._strategy_handler.handle()
             for handler in self._handlers.values():
                 handler.prepare_create_table(
                     table_name=instmt_info.table_name,

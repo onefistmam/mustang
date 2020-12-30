@@ -58,9 +58,9 @@ class KlineCallback(Callback):
 
 
 class BookTickerCallback(Callback):
-    async def __call__(self, *, feed: str, pair: str, last_price: Decimal, first_bid: Decimal, first_ask: Decimal,
+    async def __call__(self, *, feed: str, pair: str, best_bid: Decimal, best_bid_size: Decimal, best_ask: Decimal, best_ask_size: Decimal,
                        timestamp: float, receipt_timestamp: float):
-        await super().__call__(feed, pair, last_price, first_bid, first_ask, timestamp, receipt_timestamp)
+        await super().__call__(feed, pair, best_bid, best_bid_size, best_ask, best_ask_size, timestamp, receipt_timestamp)
 
 
 class BookCallback(Callback):
