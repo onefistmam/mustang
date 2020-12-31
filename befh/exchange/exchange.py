@@ -1,5 +1,7 @@
+import json
 import logging
 from datetime import datetime
+from multiprocessing.managers import BaseManager
 
 from befh.strategy import QuotesStore
 from befh.strategy.strategy_handler import StrategyHandler
@@ -82,8 +84,12 @@ class Exchange:
                 exchange=self._name,
                 symbol=symbol)
             self._instruments[symbol] = instmt_info
-            self._quotes_store = QuotesStore(feed=self.name, pair=symbol)
-            self._strategy_handler = StrategyHandler(self._quotes_store)
+            #
+            # manager = BaseManager()
+            # manager.register('QuotesStore', QuotesStore)
+            # manager.start()
+            self._quotes_store = QuotesStore(symbol, self.name)
+            self._strategy_handler = StrategyHandler(quotes=self._quotes_store)
             self._strategy_handler.handle()
             for handler in self._handlers.values():
                 handler.prepare_create_table(
