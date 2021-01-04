@@ -65,7 +65,10 @@ BUY = 'buy'
 SELL = 'sell'
 BID = 'bid'
 ASK = 'ask'
+BIDS = 'bids'
+ASKS = 'asks'
 UND = 'undefined'
+TIMESTAMP = 'timestamp'
 
 
 LIMIT = 'limit'

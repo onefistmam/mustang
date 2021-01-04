@@ -5,7 +5,7 @@ import time
 # 时间戳误差
 from threading import Lock
 
-from cryptofeed.defines import BINANCE_FUTURES
+from cryptofeed.defines import BINANCE_FUTURES, TIMESTAMP, ASKS, BIDS
 import multiprocessing as mp
 
 LOG = logging.getLogger("feedhandler")
@@ -33,7 +33,7 @@ class QuotesStore:
         self._best_bid = mp.Manager().list()
         self._best_ask = mp.Manager().list()
 
-    def update_price_queue(self, feed, pair, timestamp, best_bid, best_bid_size, best_ask, best_ask_size):
+    def update_best_price_queue(self, feed, pair, timestamp, best_bid, best_bid_size, best_ask, best_ask_size):
         bb = self._best_bid
         ba = self._best_ask
         if time.time() - timestamp > TIME_DEVIATION:
@@ -54,15 +54,14 @@ class QuotesStore:
         if time.time() - timestamp > TIME_DEVIATION:
             return
 
-        ask_queue.append([timestamp, asks])
-        bid_queue.append([timestamp, bids])
+        ask_queue.append({TIMESTAMP: timestamp, ASKS: asks})
+        bid_queue.append({TIMESTAMP: timestamp, BIDS: bids})
 
         if len(ask_queue) > 1 and ask_queue[len(ask_queue) - 1][0] - ask_queue[0][0] > QUEUE_STORE_SEC:
             ask_queue.pop(0)[0]
 
         if len(bid_queue) > 1 and bid_queue[len(bid_queue) - 1][0] - bid_queue[0][0] > QUEUE_STORE_SEC:
             bid_queue.pop(0)[0]
-            print(id(self._bid_queue))
 
     def update_kline_queue(self, feed, pair, timestamp, kline):
         kline_queue = self._kline_queue

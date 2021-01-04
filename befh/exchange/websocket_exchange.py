@@ -142,7 +142,7 @@ class WebsocketExchange(RestApiExchange):
     def _update_book_ticker_callback(self, feed, pair, best_bid, best_bid_size, best_ask, best_ask_size,
                                      timestamp,
                                      receipt_timestamp=None):
-        self._quotes_store.update_price_queue(feed=feed, pair=pair, timestamp=timestamp, best_bid=best_bid,
+        self._quotes_store.update_best_price_queue(feed=feed, pair=pair, timestamp=timestamp, best_bid=best_bid,
                                               best_bid_size=best_bid_size, best_ask=best_ask,
                                               best_ask_size=best_ask_size)
 
