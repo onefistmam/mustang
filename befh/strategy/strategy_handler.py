@@ -9,6 +9,8 @@ from befh.strategy import QuotesStore
 from befh.strategy.config import configs, STRATEGY_PRICE_WAVE
 import multiprocessing as mp
 
+from cryptofeed.defines import TIMESTAMP, BIDS, ASKS
+
 
 class StrategyHandler:
 
@@ -39,10 +41,21 @@ def process_price_wave(bid_queue, ask_queue):
     print(id(bid_queue))
     if len(bid_queue) > 0:
         print(bid_queue)
+    firstBid = 0
+    firstAsk = 0
     while True:  # print("time diff", time.time() - bid_queue[0][0])
         if len(bid_queue) > 1 and len(ask_queue) > 1:
-            firstBid = bid_queue[len(bid_queue) - 1][1][0]
-            firstAsk = ask_queue[0][1][0]
+            try:
+                tmpFirstBid = bid_queue[len(bid_queue) - 1][BIDS][0]
+                tmpFirstAsk = ask_queue[len(ask_queue) - 1][ASKS][0]
+            except IndexError:
+                print(bid_queue)
+                print(ask_queue)
+
+            if firstBid == tmpFirstBid[0] and firstAsk == tmpFirstAsk[0]:
+                continue
+            firstAsk = tmpFirstAsk[0]
+            firstBid = tmpFirstBid[0]
             print(firstAsk, firstBid)
 
 

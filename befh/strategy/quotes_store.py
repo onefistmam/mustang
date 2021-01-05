@@ -57,11 +57,11 @@ class QuotesStore:
         ask_queue.append({TIMESTAMP: timestamp, ASKS: asks})
         bid_queue.append({TIMESTAMP: timestamp, BIDS: bids})
 
-        if len(ask_queue) > 1 and ask_queue[len(ask_queue) - 1][0] - ask_queue[0][0] > QUEUE_STORE_SEC:
-            ask_queue.pop(0)[0]
+        if len(ask_queue) > 1 and ask_queue[len(ask_queue) - 1][TIMESTAMP] - ask_queue[0][TIMESTAMP] > QUEUE_STORE_SEC:
+            ask_queue.pop(0)
 
-        if len(bid_queue) > 1 and bid_queue[len(bid_queue) - 1][0] - bid_queue[0][0] > QUEUE_STORE_SEC:
-            bid_queue.pop(0)[0]
+        if len(bid_queue) > 1 and bid_queue[len(bid_queue) - 1][TIMESTAMP] - bid_queue[0][TIMESTAMP] > QUEUE_STORE_SEC:
+            bid_queue.pop(0)
 
     def update_kline_queue(self, feed, pair, timestamp, kline):
         kline_queue = self._kline_queue

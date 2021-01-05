@@ -134,6 +134,9 @@ class WebsocketExchange(RestApiExchange):
             asks=asks)
         if not is_updated:
             return
+        # LOGGER.info("before ask=%s", bids)
+        bids.reverse()
+        # LOGGER.info("after ask=%s", bids)
         self._quotes_store.update_depth(feed=feed, pair=pair, timestamp=timestamp, bids=bids, asks=asks)
 
     def _update_kline_callback(self, feed, pair, timestamp, receipt_timestamp, kline):
