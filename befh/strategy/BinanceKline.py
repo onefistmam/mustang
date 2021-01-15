@@ -9,7 +9,6 @@ class BinanceKline:
         self._low_p = low_p
         self._finish = finish
 
-
     @property
     def get_open_p(self):
         return self._open_p

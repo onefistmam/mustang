@@ -5,13 +5,14 @@ import time
 # 时间戳误差
 from threading import Lock
 
+from befh.strategy.strategy_handler import PriceWaveStrategy, KlineWaveStrategy
 from cryptofeed.defines import BINANCE_FUTURES, TIMESTAMP, ASKS, BIDS
 import multiprocessing as mp
 
 LOG = logging.getLogger("feedhandler")
 
 TIME_DEVIATION = 1
-QUEUE_STORE_SEC = 60
+QUEUE_STORE_SEC = 60 * 5
 
 signal = "sell"
 mutex = Lock()
@@ -19,19 +20,20 @@ mutex = Lock()
 
 class QuotesStore:
 
-    def __init__(self, pair, feed):
+    def __init__(self, pair, feed, handler):
         self._pair = pair
         self._feed = feed
 
-        self._price_queue = mp.Manager().list()
         self._kline_queue = mp.Manager().list()
-
         self._current_kline_queue = mp.Manager().list()
         self._bid_queue = mp.Manager().list()
         self._ask_queue = mp.Manager().list()
-
         self._best_bid = mp.Manager().list()
         self._best_ask = mp.Manager().list()
+        self._handler = handler
+
+        self._kline_wave_strategy = KlineWaveStrategy(pair,feed)
+        self._price_wave_strategy = PriceWaveStrategy(pair,feed)
 
     def update_best_price_queue(self, feed, pair, timestamp, best_bid, best_bid_size, best_ask, best_ask_size):
         bb = self._best_bid
@@ -63,6 +65,8 @@ class QuotesStore:
         if len(bid_queue) > 1 and bid_queue[len(bid_queue) - 1][TIMESTAMP] - bid_queue[0][TIMESTAMP] > QUEUE_STORE_SEC:
             bid_queue.pop(0)
 
+        self._price_wave_strategy.execute(bid_queue=bid_queue, ask_queue=ask_queue, handler=self._handler)
+
     def update_kline_queue(self, feed, pair, timestamp, kline):
         kline_queue = self._kline_queue
         if time.time() - timestamp > TIME_DEVIATION:
@@ -74,10 +78,13 @@ class QuotesStore:
             if bk.finish:
                 kline_queue.append([timestamp, bk])
                 if len(kline_queue) > 0 and kline_queue[len(kline_queue) - 1][0] - kline_queue[0][0] > QUEUE_STORE_SEC:
-                    kline_queue.pop(0)[0]
+                    kline_queue.pop(0)
                 self._current_kline_queue = []
             else:
                 self._current_kline_queue.append([timestamp, bk])
+
+            self._kline_wave_strategy.execute(kline_queue=kline_queue, current_kline_queue=self._current_kline_queue,
+                                              handler=self._handler)
 
     @property
     def pair(self):
@@ -88,8 +95,8 @@ class QuotesStore:
         return self._feed
 
     @property
-    def price_queue(self):
-        return self._price_queue
+    def price_strategy_queue(self):
+        return self._price_strategy_queue
 
     @property
     def bid_queue(self):

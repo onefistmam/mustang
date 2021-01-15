@@ -88,9 +88,8 @@ class Exchange:
             # manager = BaseManager()
             # manager.register('QuotesStore', QuotesStore)
             # manager.start()
-            self._quotes_store = QuotesStore(symbol, self.name)
-            self._strategy_handler = StrategyHandler(quotes=self._quotes_store)
-            self._strategy_handler.handle()
+            self._strategy_handler = StrategyHandler(symbol)
+            self._quotes_store = QuotesStore(symbol, self.name, self._strategy_handler)
             for handler in self._handlers.values():
                 handler.prepare_create_table(
                     table_name=instmt_info.table_name,
