@@ -5,8 +5,10 @@ PRICE_GAPS = "price_gaps"
 configs = {
     'BTCUSDT':
         {
-            PRICE_GAPS: 1,
+            ## 波动幅度
+            PRICE_GAPS: 0.0001,
             STRATEGY_PRICE_WAVE: True,
-            STRATEGY_KLINE_WAVE: False
+            STRATEGY_KLINE_WAVE: False,
+
         }
 }

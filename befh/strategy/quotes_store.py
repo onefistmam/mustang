@@ -5,7 +5,8 @@ import time
 # 时间戳误差
 from threading import Lock
 
-from befh.strategy.strategy_handler import PriceWaveStrategy, KlineWaveStrategy
+from befh.strategy.config import configs
+from befh.strategy.strategy_operator import KlineWaveStrategy, PriceWaveStrategy
 from cryptofeed.defines import BINANCE_FUTURES, TIMESTAMP, ASKS, BIDS
 import multiprocessing as mp
 
@@ -21,7 +22,7 @@ mutex = Lock()
 class QuotesStore:
 
     def __init__(self, pair, feed, handler):
-        self._pair = pair
+        self._pair = pair.upper().replace('-', '')
         self._feed = feed
 
         self._kline_queue = mp.Manager().list()
@@ -32,8 +33,11 @@ class QuotesStore:
         self._best_ask = mp.Manager().list()
         self._handler = handler
 
-        self._kline_wave_strategy = KlineWaveStrategy(pair,feed)
-        self._price_wave_strategy = PriceWaveStrategy(pair,feed)
+        self._config = configs[self._pair]
+        self._kline_wave_strategy = KlineWaveStrategy(self._pair, feed, self._config)
+        self._price_wave_strategy = PriceWaveStrategy(self._pair, feed, self._config)
+
+
 
     def update_best_price_queue(self, feed, pair, timestamp, best_bid, best_bid_size, best_ask, best_ask_size):
         bb = self._best_bid
