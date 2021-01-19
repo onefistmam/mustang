@@ -47,10 +47,10 @@ class QuotesStore:
         bb.append([timestamp, [best_bid, best_bid_size]])
         ba.append([timestamp, [best_ask, best_ask_size]])
 
-        if len(bb) > 1 and bb[len(bb) - 1][0] - bb[0][0] > QUEUE_STORE_SEC:
+        while len(bb) > 1 and bb[len(bb) - 1][0] - bb[0][0] > QUEUE_STORE_SEC:
             bb.pop(0)[0]
 
-        if len(ba) > 1 and ba[len(ba) - 1][0] - ba[0][0] > QUEUE_STORE_SEC:
+        while len(ba) > 1 and ba[len(ba) - 1][0] - ba[0][0] > QUEUE_STORE_SEC:
             ba.pop(0)[0]
 
     def update_depth(self, feed, pair, timestamp, asks, bids):
@@ -63,10 +63,10 @@ class QuotesStore:
         ask_queue.append({TIMESTAMP: timestamp, ASKS: asks})
         bid_queue.append({TIMESTAMP: timestamp, BIDS: bids})
 
-        if len(ask_queue) > 1 and ask_queue[len(ask_queue) - 1][TIMESTAMP] - ask_queue[0][TIMESTAMP] > QUEUE_STORE_SEC:
+        while len(ask_queue) > 1 and ask_queue[len(ask_queue) - 1][TIMESTAMP] - ask_queue[0][TIMESTAMP] > QUEUE_STORE_SEC:
             ask_queue.pop(0)
 
-        if len(bid_queue) > 1 and bid_queue[len(bid_queue) - 1][TIMESTAMP] - bid_queue[0][TIMESTAMP] > QUEUE_STORE_SEC:
+        while len(bid_queue) > 1 and bid_queue[len(bid_queue) - 1][TIMESTAMP] - bid_queue[0][TIMESTAMP] > QUEUE_STORE_SEC:
             bid_queue.pop(0)
 
         self._price_wave_strategy.execute(bid_queue=bid_queue, ask_queue=ask_queue, handler=self._handler)
@@ -81,9 +81,9 @@ class QuotesStore:
                               high_P=kline['h'], low_p=kline['l'], finish=kline['x'])
             if bk.finish:
                 kline_queue.append([timestamp, bk])
-                if len(kline_queue) > 0 and kline_queue[len(kline_queue) - 1][0] - kline_queue[0][0] > QUEUE_STORE_SEC:
+                while len(kline_queue) > 0 and kline_queue[len(kline_queue) - 1][0] - kline_queue[0][0] > QUEUE_STORE_SEC:
                     kline_queue.pop(0)
-                self._current_kline_queue = []
+                self._current_kline_queue = mp.Manager().list()
             else:
                 self._current_kline_queue.append([timestamp, bk])
 

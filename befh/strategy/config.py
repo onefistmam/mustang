@@ -6,7 +6,7 @@ configs = {
     'BTCUSDT':
         {
             ## 波动幅度
-            PRICE_GAPS: 0.0001,
+            PRICE_GAPS: 0.01,
             STRATEGY_PRICE_WAVE: True,
             STRATEGY_KLINE_WAVE: False,
 
