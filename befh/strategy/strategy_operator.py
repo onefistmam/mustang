@@ -53,7 +53,7 @@ class PriceWaveStrategy(StrategyOperator):
             lastBid = bid_queue[len(bid_queue) - 1][BIDS][0][0]
             lastTime = bid_queue[len(bid_queue) - 1][TIMESTAMP]
             # lastAsk = ask_queue[len(bid_queue) - 1][ASKS][0][0]
-            if lastTime - bid_queue[0][TIMESTAMP] < 1 * 60:
+            if lastTime - bid_queue[0][TIMESTAMP] < 4.9 * 60:
                 return
 
             maxChange = 0
